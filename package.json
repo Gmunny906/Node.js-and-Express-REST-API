@@ -1,0 +1,28 @@
+{
+  "name": "node.js-and-express-rest-api",
+  "version": "1.0.0",
+  "description": "This is the 5th assignment in Internet Programming course for Summer I of 2026, we are dipping our toes into the area of backend for this assignment",
+  "main": "index.js",
+  "scripts": {
+    "devStart": "nodemon server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Gmunny906/Node.js-and-Express-REST-API.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/Gmunny906/Node.js-and-Express-REST-API/issues"
+  },
+  "homepage": "https://github.com/Gmunny906/Node.js-and-Express-REST-API#readme",
+  "dependencies": {
+    "ejs": "^6.0.1",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
