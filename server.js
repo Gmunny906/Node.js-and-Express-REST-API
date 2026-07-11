@@ -4,8 +4,11 @@
 // Pick a port
 
 import express from "express";
+import { logger } from "./src/middleware/logger.js";
+
 const app = express();
 app.use(express.json());
+app.use(logger);
 const PORT = 3000;
 
 app.listen(PORT, () => {
