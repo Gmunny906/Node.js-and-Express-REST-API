@@ -3,9 +3,15 @@
 // Add the mandatory middleware
 // Pick a port
 
+import dotenv from "dotenv";
+dotenv.config();
+
 import express from "express";
 import { logger } from "./src/middleware/logger.js";
 import router from "./src/routes/items.js";
+import { connectDB } from "./src/config/db.js";
+
+connectDB();
 
 
 const app = express();
