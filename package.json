@@ -19,8 +19,10 @@
   },
   "homepage": "https://github.com/Gmunny906/Node.js-and-Express-REST-API#readme",
   "dependencies": {
+    "dotenv": "^17.4.2",
     "ejs": "^6.0.1",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "mongoose": "^9.7.4"
   },
   "devDependencies": {
     "nodemon": "^3.1.14"
