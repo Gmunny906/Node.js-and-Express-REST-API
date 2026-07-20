@@ -3,8 +3,14 @@
 // Add the mandatory middleware
 // Pick a port
 
+//Kept getting an error with the server while trying to use npm run devStart
+//I had to connect to a google DNS as below in order to connect to Atlas
+import dns from "dns";
+dns.setServers(["8.8.8.8", "8.8.8.4"]);
+
 import dotenv from "dotenv";
 dotenv.config();
+console.log("Loaded URI:" , process.env.MONGODB_URI);
 
 import express from "express";
 import { logger } from "./src/middleware/logger.js";
