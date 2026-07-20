@@ -1,136 +1,184 @@
-# API Testing Summary
+# API Testing Documentation
 
-This document confirms that all 5 REST endpoints of the Items API were tested manually using PowerShell's `curl` (an alias for `Invoke-WebRequest`) and returned the expected HTTP status codes and response bodies.
+This document demonstrates successful testing of all 5 REST endpoints against a live MongoDB Atlas database, using the VS Code **REST Client** extension (`requests.http`).
 
-**Base URL:** `http://localhost:3000`
+Base URL: `http://localhost:3000/api/items`
 
 ---
 
 ## 1. GET /api/items — Retrieve all items
 
-**Command:**
-```powershell
-curl http://localhost:3000/api/items
+**Request**
+```http
+GET http://localhost:3000/api/items
 ```
 
-**Result:** `200 OK`
-```json
+**Response**
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
 []
 ```
-Confirms the endpoint responds successfully and returns an empty array before any items have been created.
+
+Confirms the route successfully connects to the MongoDB `items` collection and returns an array (empty prior to any inserts).
 
 ---
 
-## 2. POST /api/items — Create a new item
+## 2. GET /api/items/:id — Retrieve one item by id
 
-**Command:**
-```powershell
-curl -Method POST http://localhost:3000/api/items -Body '{"title":"Buy milk"}' -ContentType "application/json"
+### Case A: Invalid id format
+
+**Request**
+```http
+GET http://localhost:3000/api/items/12345
 ```
 
-**Result:** `201 Created`
-```json
-{"data":{"id":"1783823420088","title":"Buy Milk"}}
+**Response**
 ```
-Confirms a new item is created with an auto-generated unique `id`, and the correct `201` status is returned.
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+
+{
+  "error": "Item not found"
+}
+```
+
+Confirms malformed ids (not a valid MongoDB ObjectId) are caught and return a clean `404` instead of a server error.
+
+### Case B: Valid id, item exists
+
+**Request**
+```http
+GET http://localhost:3000/api/items/6a5d91548a911ef9d50ca564
+```
+
+**Response**
+```
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+{
+  "_id": "6a5d91548a911ef9d50ca564",
+  "title": "Buy milk",
+  "createdAt": "2026-07-20T03:09:08.473Z",
+  "updatedAt": "2026-07-20T03:09:08.473Z",
+  "__v": 0
+}
+```
 
 ---
 
-## 3. GET /api/items/:id — Retrieve a specific item
+## 3. POST /api/items — Create a new item
 
-**Command:**
-```powershell
-curl http://localhost:3000/api/items/1783823420088
+**Request**
+```http
+POST http://localhost:3000/api/items
+Content-Type: application/json
+
+{
+  "title": "Buy milk"
+}
 ```
 
-**Result:** `200 OK`
-```json
-{"id":"1783823420088","title":"Buy Milk"}
+**Response**
 ```
-Confirms a single item can be retrieved by its `id`.
+HTTP/1.1 201 Created
+Content-Type: application/json; charset=utf-8
 
-### Negative test — nonexistent ID
-
-**Command:**
-```powershell
-curl http://localhost:3000/api/items/99999999
+{
+  "data": {
+    "title": "Buy milk",
+    "_id": "6a5d91548a911ef9d50ca564",
+    "createdAt": "2026-07-20T03:09:08.473Z",
+    "updatedAt": "2026-07-20T03:09:08.473Z",
+    "__v": 0
+  }
+}
 ```
 
-**Result:** `404 Not Found`
-```json
-{"error":"Item not found"}
-```
-Confirms the API correctly returns a `404` when the requested `id` does not exist.
+Confirms the new document is validated, inserted into MongoDB Atlas, and returned with its database-generated `_id` and timestamps, with a `201` status.
 
 ---
 
 ## 4. PUT /api/items/:id — Update an existing item
 
-**Command:**
-```powershell
-curl -Method PUT http://localhost:3000/api/items/1783823420088 -Body '{"title":"Buy oat milk"}' -ContentType "application/json"
+**Request**
+```http
+PUT http://localhost:3000/api/items/6a5d91548a911ef9d50ca564
+Content-Type: application/json
+
+{
+  "title": "Buy oat milk"
+}
 ```
 
-**Result:** `200 OK`
-```json
-{"id":"1783823420088","title":"Buy oat milk"}
+**Response**
 ```
-Confirms the item's `title` field was successfully overwritten.
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
 
-### Negative test — missing required field
-
-**Command:**
-```powershell
-curl -Method PUT http://localhost:3000/api/items/1783823420088 -Body '{}' -ContentType "application/json"
+{
+  "_id": "6a5d91548a911ef9d50ca564",
+  "title": "Buy oat milk",
+  "createdAt": "2026-07-20T03:09:08.473Z",
+  "updatedAt": "2026-07-20T03:21:44.417Z",
+  "__v": 0
+}
 ```
 
-**Result:** `400 Bad Request`
-```json
-{"error":"Title is required"}
-```
-Confirms the API validates incoming data and rejects updates missing a `title`.
+Confirms the document was updated in place — `title` changed and `updatedAt` advanced, while `createdAt` and `_id` remained unchanged.
 
 ---
 
 ## 5. DELETE /api/items/:id — Delete an item
 
-**Command:**
-```powershell
-curl -Method DELETE http://localhost:3000/api/items/1783823420088
+### Case A: Item exists
+
+**Request**
+```http
+DELETE http://localhost:3000/api/items/6a5d91548a911ef9d50ca564
 ```
 
-**Result:** `200 OK`
-```json
-{"data":"Item with id 1783823420088 deleted successfully"}
+**Response**
 ```
-Confirms the item was successfully deleted and a confirmation message was returned.
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
 
-### Verification — item no longer exists
-
-**Command:**
-```powershell
-curl http://localhost:3000/api/items/1783823420088
+{
+  "data": "Item with id 6a5d91548a911ef9d50ca564 deleted successfully"
+}
 ```
 
-**Result:** `404 Not Found`
-```json
-{"error":"Item not found"}
+### Case B: Same item deleted again (no longer exists)
+
+**Request**
+```http
+DELETE http://localhost:3000/api/items/6a5d91548a911ef9d50ca564
 ```
-Confirms the item was actually removed from the in-memory data store, not just marked as deleted.
+
+**Response**
+```
+HTTP/1.1 404 Not Found
+Content-Type: application/json; charset=utf-8
+
+{
+  "error": "Item not found"
+}
+```
+
+Confirms the delete operation permanently removes the document from Atlas, and a repeat delete on the same id correctly returns a `404` rather than a false success.
 
 ---
 
-## Summary Table
+## Summary
 
-| Method | Endpoint            | Scenario           | Expected Status | Actual Status | Result |
-|--------|----------------------|---------------------|:---------------:|:--------------:|:------:|
-| GET    | `/api/items`          | No items yet        | 200              | 200             | ✅ |
-| POST   | `/api/items`          | Valid title         | 201              | 201             | ✅ |
-| GET    | `/api/items/:id`      | Existing item        | 200              | 200             | ✅ |
-| GET    | `/api/items/:id`      | Nonexistent item    | 404              | 404             | ✅ |
-| PUT    | `/api/items/:id`      | Valid update        | 200              | 200             | ✅ |
-| PUT    | `/api/items/:id`      | Missing title       | 400              | 400             | ✅ |
-| DELETE | `/api/items/:id`      | Existing item        | 200              | 200             | ✅ |
-| GET    | `/api/items/:id`      | After deletion        | 404              | 404             | ✅ |
+| Method | Endpoint | Status Codes Verified |
+|--------|----------|------------------------|
+| GET | `/api/items` | 200 |
+| GET | `/api/items/:id` | 200, 404 |
+| POST | `/api/items` | 201 |
+| PUT | `/api/items/:id` | 200 |
+| DELETE | `/api/items/:id` | 200, 404 |
 
-All endpoints behaved as expected across both success and failure scenarios.
+All endpoints tested against a live MongoDB Atlas cluster using Mongoose, with `ObjectId` validation and Mongoose schema validation in place.
