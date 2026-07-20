@@ -1,7 +1,27 @@
 ### Get all items
 GET http://localhost:3000/api/items
 
-### Get one item by id
+### Get one item by id with fake id
+GET http://localhost:3000/api/items/12345
 
+### Create an item
+POST http://localhost:3000/api/items
+Content-Type: application/json
 
-## Create an item
+{
+    "title": "Buy milk"
+}
+
+### Get on item by real id
+GET http://localhost:3000/api/items/6a5d91548a911ef9d50ca564
+
+### Update an item by real ID
+PUT http://localhost:3000/api/items/6a5d91548a911ef9d50ca564
+Content-Type: application/json
+
+{
+    "title": "Buy oat milk"
+}
+
+### Delete an item
+DELETE http://localhost:3000/api/items/6a5d91548a911ef9d50ca564

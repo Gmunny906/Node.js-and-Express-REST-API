@@ -14,10 +14,17 @@ router.get('/', async (req, res) => {
   const items = await Item.find();
   res.json(items);
 });
+//same as before just with the structure for a mongoDB DB
 
-router.get('/:id', (req, res) => {
-    const itemId = req.params.id;
-  const item = items.find(i => i.id === itemId);
+router.get('/:id', async (req, res) => {
+  const itemId = req.params.id;
+
+  // _id is very specific for mongoDB
+  if (!mongoose.Types.ObjectId.isValid(itemId)) {
+    return res.status(404).json({ error: 'Item not found' });
+  }
+
+  const item = await Item.findById(itemId);
 
   if (!item) {
     return res.status(404).json({ error: 'Item not found' });
@@ -26,21 +33,19 @@ router.get('/:id', (req, res) => {
   res.json(item);
 });
 
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
   const { title } = req.body;
   if (!title) {
     return res.status(400).json({ error: 'Title is required' });
   }
-  const newItem = { id: Date.now().toString(), title: title.trim() };
-  items.push(newItem);
+  const newItem = await Item.create({ title: title.trim() });
   res.status(201).json({ data: newItem });
 });
 
-router.put('/:id', (req, res) => {
+router.put('/:id', async (req, res) => {
   const itemId = req.params.id;
-  const itemIndex = items.findIndex(i => i.id === itemId);
 
-  if (itemIndex === -1) {
+  if (!mongoose.Types.ObjectId.isValid(itemId)) {
     return res.status(404).json({ error: 'Item not found' });
   }
 
@@ -49,21 +54,32 @@ router.put('/:id', (req, res) => {
     return res.status(400).json({ error: 'Title is required' });
   }
 
-  const updatedItem = { ...items[itemIndex], title: title.trim() };
-  items[itemIndex] = updatedItem;
-  res.json(updatedItem);
-});
+  const updatedItem = await Item.findByIdAndUpdate(
+    itemId,
+    { title: title.trim() },
+    { new: true, runValidators: true }
+  );
 
-router.delete('/:id', (req, res) => {
-  const itemId = req.params.id;
-  const itemIndex = items.findIndex(i => i.id === itemId);
-
-  if (itemIndex === -1) {
+  if (!updatedItem) {
     return res.status(404).json({ error: 'Item not found' });
   }
 
+  res.json(updatedItem);
+});
 
-  items.splice(itemIndex, 1);
+router.delete('/:id', async (req, res) => {
+  const itemId = req.params.id;
+
+  if (!mongoose.Types.ObjectId.isValid(itemId)) {
+    return res.status(404).json({ error: 'Item not found' });
+  }
+
+  const deletedItem = await Item.findByIdAndDelete(itemId);
+
+  if (!deletedItem) {
+    return res.status(404).json({ error: 'Item not found'});
+  }
+
   res.status(200).json({ data: `Item with id ${itemId} deleted successfully` });
 });
 
