@@ -1,0 +1,7 @@
+### Get all items
+GET http://localhost:3000/api/items
+
+### Get one item by id
+
+
+## Create an item

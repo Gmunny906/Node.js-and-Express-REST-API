@@ -1,4 +1,6 @@
 import express from 'express';
+import mongoose from 'mongoose';
+import Item from '../models/Item.js';
 
 const router = express.Router();
 
@@ -6,10 +8,10 @@ const router = express.Router();
 // - but the items array can still be modified.
 //tldr; const prevents the reassignment of the array variable
 
-let items = [];
 
 // GET /items - Retrieve all items
-router.get('/', (req, res) => {
+router.get('/', async (req, res) => {
+  const items = await Item.find();
   res.json(items);
 });
 
